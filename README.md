@@ -23,9 +23,11 @@ The authentication routine is similar to both HTTP Basic Auth and the use of ran
 
 **Token Auth vs. HTTP Basic Auth**
 
-HTTP Basic Auth is deeply problematic for many use cases because the user password must be used for every request. It is thus totally inappropriate for use after an initial login, as this would require storing the user's password in a readable format.
+HTTP Basic Auth is deeply problematic for many use cases because the user password must be used for every request. It's great for handling the initial login if that's to be done over an API endpoint, and it's fine for many simple APIs in their early stages. But it should be avoided for user sessions, as this would require storing the user's password in a readable format.
 
-Token Auth solves this problem by replacing the user's password with a secure random ID. For that matter, we no longer ask the user to assert their identity either - we restrict that to a lookup on the server. For a typical 256-bit random token, such IDs are very secure. If we further harden our service with a minimal effort to log and throttle failed auth attempts, it's unlikely that user sessions themselves will be a useful attack point.
+Token Auth solves this problem by replacing the user's password with a disposable large random ID. We no longer ask the user to assert their account identity either - we restrict that to a lookup on the server.
+
+For a recommended 256-bit random token, such IDs are very secure. If we further harden our service with a minimal effort to log and throttle failed auth attempts, it's unlikely that user sessions themselves will be a useful attack point.
 
 **Token Auth vs. JSON Web Tokens**
 
