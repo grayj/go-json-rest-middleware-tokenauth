@@ -27,7 +27,7 @@ HTTP Basic Auth is deeply problematic for many use cases because the user passwo
 
 Token Auth solves this problem by replacing the user's password with a secure random ID. For that matter, we no longer ask the user to assert their identity either - we restrict that to a lookup on the server. For a typical 256-bit random token, such IDs are very secure. If we further harden our service with a minimal effort to log and throttle failed auth attempts, it's unlikely that user sessions themselves will be a useful attack point.
 
-** Token Auth vs. JSON Web Tokens**
+**Token Auth vs. JSON Web Tokens**
 
 There are a few use cases for JSON Web Tokens (JWT) which are worth considering. However, there are a few major weaknesses - the most critical of which is that you have no simple way to invalidate a token, because JWT trusts any signed token as an assertion that the provider is the linked user.
 
