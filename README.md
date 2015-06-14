@@ -15,7 +15,7 @@ It's also advisable to rotate tokens periodically - it doesn't need to be every 
 
 Requests must be made over HTTPS, or your app will be about as secure as wet paper.
 
-### When to use
+### When to use Token Auth
 
 Token auth appropriate for securing user sessions in a JavaScript application after initial password authentication.
 
