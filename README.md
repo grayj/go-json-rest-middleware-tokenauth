@@ -29,11 +29,9 @@ Token Auth solves this problem by replacing the user's password with a secure ra
 
 **Token Auth vs. JSON Web Tokens**
 
-There are a few use cases for JSON Web Tokens (JWT) which are worth considering. However, there are a few major weaknesses - the most critical of which is that you have no simple way to invalidate a token, because JWT trusts any signed token as an assertion that the provider is the linked user.
+There are a few use cases for JSON Web Tokens (JWT) which are worth considering. However, there are a few major weaknesses, the most critical of which is that you have no simple way to invalidate a token, because JWT trusts any signed token as an assertion that the provider is the linked user.
 
-Also, "let's get clever and avoid having to store authentication data in the database" is one of those points which repeatedly leads to security events, so the paranoid security engineer may wish to avoid using such a schema simply on the face of it.
-
-But security of JWT aside - look again at that "no simple mechanism for token invalidation" problem. Even if JWT itself remains perfectly secure, that complicates every other possible security vulnerability. If someone else gains access to the user's system and clones their JWT token, what's your recovery plan? There are options, but they're not pretty.
+JWT is a clever solution to avoid server-side state...but server time is cheap and it's not that challenging to integrate a database. It's a solution to a problem we usually don't have, which unnecessarily complicates our security. If for some reason you have a non-static server and still need a stateless app, maybe consider JWT. But it's unusual to have both of those happen at the same time.
 
 Token Auth relies on server-side storage of valid tokens, which means that token invalidation is as simple as issuing a DELETE query. And it is the antethesis of clever. You issue a long random ID, it maps to a known user. When a user provides the long random ID, you look it up to find out which user they are. Done.
 
