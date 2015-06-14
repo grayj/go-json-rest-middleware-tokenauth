@@ -5,7 +5,7 @@ This package provides a [Go-Json-Rest](https://ant0ine.github.io/go-json-rest/) 
 
 * Extracting authentication tokens from an incoming Authorization header
 * Injecting an appropriate WWW-Authenticate header for 401: Unauthorized
-* Calling your supplied `Authenticator` and `Authorizer` functions and setting request.Env["REMOTE_USER"].(string)
+* Calling your supplied `Authenticator` and `Authorizer` functions and setting `request.Env["REMOTE_USER"].(string)`
 * Secure generation of tokens, via `tokenauth.New() (string, error)`
 * Secure comparison of tokens, via `tokenauth.Equal(string, string) bool`
 
