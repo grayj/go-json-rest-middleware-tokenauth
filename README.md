@@ -61,7 +61,7 @@ Plus or minus "you should use godep" and possibly vendoring.
 
 ### Usage
 
-The middleware should be instantiated by populating the following struct, then adding it to your Go-JSON-Rest app via api.Use().
+The middleware should be instantiated by populating the following struct and adding it to your app via api.Use().
 
 	type AuthTokenMiddleware struct {
 		// Realm name to display to the user. Required.
