@@ -37,6 +37,20 @@ JWT is a clever solution to avoid server-side state...but server time is cheap a
 
 Token Auth relies on server-side storage of valid tokens, which means that token invalidation is as simple as issuing a DELETE query. And it is the antethesis of clever. You issue a long random ID, it maps to a known user. When a user provides the long random ID, you look it up to find out which user they are. Done.
 
+**Token Auth vs. OAuth / OAuth 2**
+
+OAuth is more full-featured than Token Auth, but also more complex on both the server and client sides. Token Auth should be thought of as "just enough complexity to secure the requests."
+
+In general, prefer Token Auth to secure requests from your own app, and OAuth to secure public APIs which need to have more precise and consistent behavior. Requests in transit should be equally secure in either case (provided you use HTTPS!). The main difference is complexity and how the credentials behave over their lifecycle.
+
+### Why don't we use HMAC signing?
+
+If you want features like signed tokens, those can be implemented on top of the base Token Auth. However, this just creates a longer random number for an attacker to guess (or intercept). You can verify mathematically that you signed it...but you could already verify that you issued an unsigned token by looking up the answer, and 256-bit random IDs are already long enough to be [considered secure](https://gist.github.com/tqbf/be58d2d39690c3b366ad). For reference, they're enough to leave more than 10^67 addresses for every person on Earth. You won't have enough users to put a dent in that.
+
+Similarly, we could sign requests, but it would be kind of pointless when we're transmitting the signing key along with the request. All it would prove is that the user's computer is capable of executing mathematical algorithms and getting a consistent answer. The alternative factoring here would be to sign the request and not transmit the token, which is a potentially valid choice. But then we'd need to have assertion of identity, and signing/unsigning complexity, and that's not the series of choices that Token Auth has made.
+
+Token Auth is the "don't be clever" solution to user identity. Use HTTPS and 256-bit tokens. More security holes are caused by trying to be clever or by failing to cover the basics than by anything else.
+
 ### Installation
 
 You can do the usual:
