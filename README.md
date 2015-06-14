@@ -39,7 +39,7 @@ Token Auth relies on server-side storage of valid tokens, which means that token
 
 **Token Auth vs. OAuth / OAuth 2**
 
-OAuth is more full-featured than Token Auth, but also more complex on both the server and client sides. Token Auth should be thought of as "just enough complexity to secure the requests."
+OAuth is more full-featured than Token Auth, but also more complex on both the server and client sides. Token Auth should be thought of as "just enough complexity to securely solve user identity."
 
 In general, prefer Token Auth to secure requests from your own app, and OAuth to secure public APIs which need to have more precise and consistent behavior. Requests in transit should be equally secure in either case (provided you use HTTPS!). The main difference is complexity and how the credentials behave over their lifecycle.
 
