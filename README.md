@@ -5,9 +5,9 @@ This package provides a [Go-Json-Rest](https://ant0ine.github.io/go-json-rest/) 
 
 * Extracting authentication tokens from an incoming Authorization header
 * Injecting an appropriate WWW-Authenticate header for 401: Unauthorized
-* Calling your supplied `Authenticator` and `Authorizer` functions and setting `request.Env["REMOTE_USER"].(string)`
-* Secure generation of tokens, via `tokenauth.New() (string, error)`
-* Secure comparison of tokens, via `tokenauth.Equal(string, string) bool`
+* Calling your supplied Authenticator and Authorizer functions and setting request.Env["REMOTE_USER"].(string)
+* Secure generation of tokens, via New(), defaulting to the [security guideline](https://gist.github.com/tqbf/be58d2d39690c3b366ad) of 256-bit IDs
+* Secure comparison of tokens, via Equal() - but note that you should be looking up tokens, not doing equality tests
 
 Token storage and expiration are out of scope. Put them in your database with a created timestamp and User ID, or store them in Redis with a mapped User ID and an Expires time.
 
@@ -58,3 +58,34 @@ You can do the usual:
     go get github.com/grayj/go-user-passwords
 
 Plus or minus "you should use godep" and possibly vendoring.
+
+### Usage
+
+The middleware should be instantiated by populating the following struct, then adding it to your Go-JSON-Rest app via api.Use().
+
+	type AuthTokenMiddleware struct {
+		// Realm name to display to the user. Required.
+		Realm string
+
+		// Callback function that should perform the authentication of the user based on token.
+		// Must return userID as string on success, empty string on failure. Required.
+		// The returned userID is normally the primary key for your user record.
+		Authenticator func(token string) string
+
+		// Callback function that should perform the authorization of the authenticated user.
+		// Must return true on success, false on failure. Optional, defaults to success.
+		// Called only after an authentication success.
+		Authorizer func(request *rest.Request) bool
+
+		// Nominal token entropy in bytes. Optional, defaults to recommended 32 bytes / 256-bit.
+		TokenEntropy int
+	}
+
+* Realm is an arbitrary string, often the app name.
+* Authenticator should perform a lookup of the token and return the corresponding internal user ID as a string.
+* Authorizer should return true if the user is authorized for the request, false if they're not allowed.
+* TokenEntropy shouldn't be set. Seriously, don't touch this. 256-bit is safe, less may not be, more is unnecessary.
+
+Generating a new random token is done via tokenauth.New() and returns a base-64 encoded value. The result is URL safe and adheres to RFC 4648 per crypto/base64. This was chosen because it makes New() dovetail as a perfectly fine generator for password reset tokens (if so used, make sure to expire password reset tokens in a matter of hours).
+
+Secure comparison of strings is available via tokenauth.Equal(), which simply calls subtle.ConstantTimeCompare(), which is the right way to do secure (constant-time XOR) equality tests in Go. However, you shouldn't ever be doing equality tests in Token Auth, you should be doing lookups against a server-side data store. This is provided on the off chance that it comes up for some unexpected reason, so that a right answer will be at hand.
