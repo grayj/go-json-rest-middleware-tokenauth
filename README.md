@@ -86,6 +86,8 @@ The middleware should be instantiated by populating the following struct, then a
 * Authorizer should return true if the user is authorized for the request, false if they're not allowed.
 * TokenEntropy shouldn't be set. Seriously, don't touch this. 256-bit is safe, less may not be, more is unnecessary.
 
+If the middleware is properly configured, the user ID string for the authenticated and authorized user will be available as request.Env["REMOTE_USER"].(string) within your API functions.
+
 Generating a new random token is done via tokenauth.New() and returns a base-64 encoded value. The result is URL safe and adheres to RFC 4648 per crypto/base64. This was chosen because it makes New() dovetail as a perfectly fine generator for password reset tokens (if so used, make sure to expire password reset tokens in a matter of hours).
 
 Secure comparison of strings is available via tokenauth.Equal(), which simply calls subtle.ConstantTimeCompare(), which is the right way to do secure (constant-time XOR) equality tests in Go. However, you shouldn't ever be doing equality tests in Token Auth, you should be doing lookups against a server-side data store. This is provided on the off chance that it comes up for some unexpected reason, so that a right answer will be at hand.
