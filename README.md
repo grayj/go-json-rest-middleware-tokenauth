@@ -19,7 +19,7 @@ Requests must be made over HTTPS, or your app will be about as secure as wet pap
 
 You can do the usual:
 
-    go get github.com/grayj/go-user-passwords
+    go get github.com/grayj/go-json-rest-middleware-tokenauth
 
 Plus or minus "you should use godep" and possibly vendoring.
 
