@@ -48,7 +48,7 @@ The middleware should be instantiated by populating the following struct and add
 * Realm is an arbitrary string, often the app name.
 * Authenticator should perform a lookup of the token and return the corresponding internal user ID as a string.
 * Authorizer should return true if the user is authorized for the request, false if they're not allowed.
-* TokenEntropy shouldn't be set. Seriously, don't touch this. 256-bit is safe, less may not be, more is unnecessary.
+* TokenEntropy should usually be ignored. 256-bit is safe, less may not be, more is unnecessary.
 
 If the middleware is properly configured, the user ID string for the authenticated and authorized user will be available as request.Env["REMOTE_USER"].(string) within your API functions.
 
