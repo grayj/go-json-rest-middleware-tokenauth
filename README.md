@@ -56,6 +56,16 @@ Generating a new random token is done via tokenauth.New() and returns a base-64 
 
 Secure comparison of strings is available via tokenauth.Equal(), which simply calls subtle.ConstantTimeCompare(), which is the right way to do secure (constant-time XOR) equality tests in Go. However, you shouldn't ever be doing equality tests in Token Auth, you should be doing lookups against a server-side data store. This is provided on the off chance that it comes up for some unexpected reason, so that a right answer will be at hand.
 
+### Storing your tokens
+
+The type of store to use is up to you, I like Redis, or else a relational database. Avoid using Memcached - it's not a good idea to have user sessions arbitrarily falling out the bottom of your store.
+
+Should you hash your tokens? Yeah. The reason for this is that if someone got access to your stored tokens, they could run arbitrary requests using those tokens as if they were your users. Running any reasonable hash over the token before lookup, e.g. MD5, makes it so that the token as presented and the key as looked up are not the same, and leaking the key as looked up is not enough for an attacker to masquerade as those users.
+
+Why is MD5 fine? In this case, scrypt or bcrypt would be a bad answer. And bcrypt in particular will behave badly if fed binary data, as from a random token. We need them normally to defend against rainbow tables and other similar issues, compounded by users recycling the same password across many services and the comparatively low entropy of human-interactive passwords. But with random IDs, such attacks are not relevant. There's no way for an attacker to guess 256-bit IDs, so we're fine with any non-reversible hash function.
+
+Note that this means our probability of key collisions becomes controlled by the shorter address space of the hashed representation. Collisions go from astronomically improbable, to something which will happen eventually for enough users and events. But this is solved by checking whether a new token's hashed representation is already in your store. If it is, simply try a new random token.
+
 ### When to use Token Auth
 
 Token auth appropriate for securing user sessions in a JavaScript application after initial password authentication.
