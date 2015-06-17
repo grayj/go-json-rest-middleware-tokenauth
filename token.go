@@ -1,6 +1,7 @@
 package tokenauth
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -110,6 +111,11 @@ func (mw *AuthTokenMiddleware) New() (string, error) {
 // Equal does constant-time XOR comparison of two tokens
 func (mw *AuthTokenMiddleware) Equal(a, b string) bool {
 	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
+}
+
+// Hash applies a simple MD5 hash over a token, making it safe to store
+func (mw *AuthTokenMiddleware) Hash(token string) string {
+	return base64.URLEncoding.EncodeToString(md5.Sum([]byte(token)))
 }
 
 func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
