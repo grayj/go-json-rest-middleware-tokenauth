@@ -50,13 +50,69 @@ The middleware should be instantiated by populating the following struct and add
 * Realm is an arbitrary string, often the app name.
 * Authenticator should perform a lookup of the token and return the corresponding internal user ID as a string.
 * Authorizer should return true if the user is authorized for the request, false if they're not allowed.
-* TokenEntropy should usually be ignored. 256-bit is safe, less may not be, more is unnecessary.
 
-If the middleware is properly configured, the user ID string for the authenticated and authorized user will be available as request.Env["REMOTE_USER"].(string) within your API functions.
+If the middleware is properly configured, the user ID string for the authenticated and authorized user will be available as request.Env["REMOTE_USER"].(string) within your go-json-rest API functions.
 
 Generating a new random token is done via tokenauth.New() and returns a base-64 encoded value. The result is URL safe and adheres to RFC 4648 per crypto/base64. Note that this function dovetails as a perfectly fine generator for password reset tokens (if so used, make sure to expire password reset tokens in a matter of hours).
 
-Secure comparison of strings is available via tokenauth.Equal(), which simply calls subtle.ConstantTimeCompare(), which is the right way to do secure (constant-time XOR) equality tests in Go. However, you shouldn't ever be doing equality tests in Token Auth, you should be doing lookups against a server-side data store. This is provided on the off chance that it comes up for some unexpected reason, so that a right answer will be at hand.
+The tokenauth.Hash() function gives a string taken as base64(md5(string)), for hashing tokens before storage. MD5 is fine since you'll be using 256-bit random IDs.
+
+There's also a tokenauth.Equal() method which does constant-time comparison, but it's unlikely that you'll ever need it.
+
+### Example
+
+Assuming Redis via redigo with connection pooling, you could define your auth middlewares as follows.
+
+	var authRealm = "test"
+	var tokenNamespace = "user:"
+
+	var tokenAuthMiddleware = &tokenauth.AuthTokenMiddleware{
+		Realm: authRealm,
+		Authenticator: func(token string) string {
+			rd := redisPool.Get()
+			defer rd.Close()
+			user, _ := redis.String(rd.Do("GET", tokenNamespace+tokenauth.Hash(token)))
+			return user
+		},
+	}
+
+	var basicAuthMiddleware = &rest.AuthBasicMiddleware{
+		Realm: authRealm,
+		Authenticator: func(user string, password string) bool {
+			if user == "user" && password == "password" {
+				return true
+			}
+			return false
+		},
+	}
+
+The IfMiddleware is helpful for using HTTP Basic Auth for a /login endpoint and Token Auth for any other routes.
+
+	api.Use(&rest.IfMiddleware{
+		Condition: func(request *rest.Request) bool {
+			return request.URL.Path != "/login"
+		},
+		IfTrue:  tokenAuthMiddleware,
+		IfFalse: basicAuthMiddleware,
+	})
+
+Simple login route, sets a Redis key that maps hashed token -> user, expires in seven days. You could do this equally well with a relational database and a created timestamp. This doesn't check for hash collisions after New(), which you should check since it's constrained by the MD5 address space and *will* run into collsions for enough users or events.
+
+	func login(w rest.ResponseWriter, r *rest.Request) {
+		token, err := tokenauth.New()
+		if err != nil {
+			rest.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		rd := redisPool.Get()
+		defer rd.Close()
+		_, err = rd.Do("SET", tokenNamespace+tokenauth.Hash(token), r.Env["REMOTE_USER"].(string), "EX", 604800)
+
+		w.WriteJson(map[string]string{
+			"access_token": token,
+		})
+	}
 
 ### Storing your tokens
 
