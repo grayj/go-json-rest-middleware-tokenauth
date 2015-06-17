@@ -55,7 +55,7 @@ func (mw *AuthTokenMiddleware) MiddlewareFunc(handler rest.HandlerFunc) rest.Han
 			return
 		}
 
-		token, err := mw.decodeAuthHeader(authHeader)
+		token, err := decodeAuthHeader(authHeader)
 		// Authorization header was *malformed* such that we couldn't extract a token
 		if err != nil {
 			mw.unauthorized(writer)
@@ -80,22 +80,22 @@ func (mw *AuthTokenMiddleware) MiddlewareFunc(handler rest.HandlerFunc) rest.Han
 	}
 }
 
-// Extract the token from the current request.
-func (mw *AuthTokenMiddleware) decodeAuthHeader(header string) (string, error) {
-	parts := strings.SplitN(header, " ", 2)
-	if !(len(parts) == 2 && parts[0] == "Token") {
-		return "", errors.New("Invalid authentication")
-	}
-	_, err := base64.URLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", errors.New("Invalid base64")
-	}
-	return string(parts[1]), nil
-}
-
 func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
 	writer.Header().Set("WWW-Authenticate", "Token realm="+mw.Realm)
 	rest.Error(writer, "Not Authorized", http.StatusUnauthorized)
+}
+
+// Extract the token from an Authorization header
+func decodeAuthHeader(header string) (string, error) {
+	parts := strings.SplitN(header, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Token") {
+		return "", errors.New("Invalid Authorization header")
+	}
+	_, err := base64.URLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", errors.New("Token encoding not valid")
+	}
+	return string(parts[1]), nil
 }
 
 // New generates a new random token
@@ -117,4 +117,10 @@ func Equal(a, b string) bool {
 func Hash(token string) string {
 	hashed := md5.Sum([]byte(token))
 	return base64.URLEncoding.EncodeToString(hashed[:])
+}
+
+// Token extracts current request's token, useful for logout and refresh where it's used post-auth
+func Token(request *rest.Request) (string, error) {
+	authHeader := request.Header.Get("Authorization")
+	return decodeAuthHeader(authHeader)
 }
