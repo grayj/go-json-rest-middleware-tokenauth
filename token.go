@@ -115,7 +115,8 @@ func (mw *AuthTokenMiddleware) Equal(a, b string) bool {
 
 // Hash applies a simple MD5 hash over a token, making it safe to store
 func (mw *AuthTokenMiddleware) Hash(token string) string {
-	return base64.URLEncoding.EncodeToString(md5.Sum([]byte(token)))
+	hashed := md5.Sum([]byte(token))
+	return base64.URLEncoding.EncodeToString(hashed[:])
 }
 
 func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
