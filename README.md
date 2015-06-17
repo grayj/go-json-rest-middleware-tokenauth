@@ -61,7 +61,7 @@ There's also a tokenauth.Equal() method which does constant-time comparison, but
 
 ### Example
 
-Assuming Redis via redigo with connection pooling, you could define your auth middlewares as follows.
+Assuming Redis via [redigo](https://github.com/garyburd/redigo) with [connection pooling](godoc.org/github.com/garyburd/redigo/redis#Pool), you could define your auth middlewares as follows.
 
 	var authRealm = "test"
 	var tokenNamespace = "user:"
