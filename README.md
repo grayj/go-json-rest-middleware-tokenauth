@@ -1,6 +1,8 @@
 # go-json-rest-middleware-tokenauth
 Token authentication middleware for go-json-rest
 
+[![Godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/grayj/go-json-rest-middleware-tokenauth)
+
 This package provides a [Go-Json-Rest](https://ant0ine.github.io/go-json-rest/) middleware useful for Token-based authentication. The middleware provides the following features:
 
 * Extracting authentication tokens from an incoming Authorization header
