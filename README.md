@@ -114,6 +114,8 @@ Simple login route, sets a Redis key that maps hashed token -> user, expires in 
 		})
 	}
 
+Note: remember to define your /login route as a POST request, not GET.
+
 ### Storing your tokens
 
 The type of store to use is up to you, I like Redis, or else a relational database. Avoid using Memcached - it's not a good idea to have user sessions arbitrarily falling out the bottom of your store.
