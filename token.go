@@ -86,11 +86,11 @@ func (mw *AuthTokenMiddleware) decodeAuthHeader(header string) (string, error) {
 	if !(len(parts) == 2 && parts[0] == "Token") {
 		return "", errors.New("Invalid authentication")
 	}
-	token, err := base64.URLEncoding.DecodeString(parts[1])
+	_, err := base64.URLEncoding.DecodeString(parts[1])
 	if err != nil {
 		return "", errors.New("Invalid base64")
 	}
-	return string(token), nil
+	return string(parts[1]), nil
 }
 
 func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
