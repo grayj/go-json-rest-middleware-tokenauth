@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var tokenEntropy = 32
+
 // AuthTokenMiddleware provides a Token Auth implementation. On success, the wrapped middleware
 // is called, and the userID is made available as request.Env["REMOTE_USER"].(string)
 type AuthTokenMiddleware struct {
@@ -27,9 +29,6 @@ type AuthTokenMiddleware struct {
 	// Must return true on success, false on failure. Optional, defaults to success.
 	// Called only after an authentication success.
 	Authorizer func(request *rest.Request) bool
-
-	// Nominal token entropy in bytes. Optional, defaults to recommended 32 bytes / 256-bit.
-	TokenEntropy int
 }
 
 // MiddlewareFunc makes AuthTokenMiddleware implement the Middleware interface.
@@ -46,10 +45,6 @@ func (mw *AuthTokenMiddleware) MiddlewareFunc(handler rest.HandlerFunc) rest.Han
 		mw.Authorizer = func(request *rest.Request) bool {
 			return true
 		}
-	}
-
-	if mw.TokenEntropy == 0 {
-		mw.TokenEntropy = 32 // 32 byte == 256 bit == recommended secure ID entropy
 	}
 
 	return func(writer rest.ResponseWriter, request *rest.Request) {
@@ -98,9 +93,14 @@ func (mw *AuthTokenMiddleware) decodeAuthHeader(header string) (string, error) {
 	return string(token), nil
 }
 
+func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
+	writer.Header().Set("WWW-Authenticate", "Token realm="+mw.Realm)
+	rest.Error(writer, "Not Authorized", http.StatusUnauthorized)
+}
+
 // New generates a new random token
-func (mw *AuthTokenMiddleware) New() (string, error) {
-	bytes := make([]byte, mw.TokenEntropy)
+func New() (string, error) {
+	bytes := make([]byte, tokenEntropy)
 	_, err := rand.Read(bytes[:cap(bytes)])
 	if err != nil {
 		return "", err
@@ -109,17 +109,12 @@ func (mw *AuthTokenMiddleware) New() (string, error) {
 }
 
 // Equal does constant-time XOR comparison of two tokens
-func (mw *AuthTokenMiddleware) Equal(a, b string) bool {
+func Equal(a, b string) bool {
 	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }
 
 // Hash applies a simple MD5 hash over a token, making it safe to store
-func (mw *AuthTokenMiddleware) Hash(token string) string {
+func Hash(token string) string {
 	hashed := md5.Sum([]byte(token))
 	return base64.URLEncoding.EncodeToString(hashed[:])
-}
-
-func (mw *AuthTokenMiddleware) unauthorized(writer rest.ResponseWriter) {
-	writer.Header().Set("WWW-Authenticate", "Token realm="+mw.Realm)
-	rest.Error(writer, "Not Authorized", http.StatusUnauthorized)
 }
