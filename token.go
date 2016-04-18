@@ -6,10 +6,11 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"errors"
-	"github.com/ant0ine/go-json-rest/rest"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
 var tokenEntropy = 32
@@ -48,18 +49,24 @@ func (mw *AuthTokenMiddleware) MiddlewareFunc(handler rest.HandlerFunc) rest.Han
 	}
 
 	return func(writer rest.ResponseWriter, request *rest.Request) {
-		authHeader := request.Header.Get("Authorization")
-		// Authorization header was not provided
-		if authHeader == "" {
-			mw.unauthorized(writer)
-			return
-		}
+		var err error
+		var token string
+		if len(request.URL.Query().Get("access_token")) > 0 {
+			token = request.URL.Query().Get("access_token")
+		} else {
+			authHeader := request.Header.Get("Authorization")
+			// Authorization header was not provided
+			if authHeader == "" {
+				mw.unauthorized(writer)
+				return
+			}
 
-		token, err := decodeAuthHeader(authHeader)
-		// Authorization header was *malformed* such that we couldn't extract a token
-		if err != nil {
-			mw.unauthorized(writer)
-			return
+			token, err = decodeAuthHeader(authHeader)
+			// Authorization header was *malformed* such that we couldn't extract a token
+			if err != nil {
+				mw.unauthorized(writer)
+				return
+			}
 		}
 
 		userID := mw.Authenticator(token)
