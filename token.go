@@ -6,10 +6,12 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"errors"
-	"github.com/ant0ine/go-json-rest/rest"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/qapi/qswiss"
 )
 
 var tokenEntropy = 32
@@ -106,6 +108,11 @@ func New() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+// NewV2 generates new random token using SHA-512 instead of MD5
+func NewV2() (string, error) {
+	return qswiss.GenerateToken(tokenEntropy)
 }
 
 // Equal does constant-time XOR comparison of two tokens
